@@ -1,0 +1,114 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String        @id @default(cuid())
+  name          String?
+  email         String        @unique
+  password      String?
+  image         String?
+  boards        Board[]       @relation("OwnerBoards")
+  assignedTasks Task[]        @relation("AssignedTasks")
+  memberships   BoardMember[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+model Board {
+  id          String        @id @default(cuid())
+  title       String
+  description String?
+  owner       User          @relation("OwnerBoards", fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId     String
+  lists       List[]
+  members     BoardMember[]
+  activities  Activity[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model BoardMember {
+  id        String   @id @default(cuid())
+  board     Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  boardId   String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  role      Role     @default(MEMBER)
+  createdAt DateTime @default(now())
+  @@unique([boardId, userId])
+}
+
+model List {
+  id        String   @id @default(cuid())
+  title     String
+  order     Int
+  board     Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  boardId   String
+  tasks     Task[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Task {
+  id          String       @id @default(cuid())
+  title       String
+  description String?
+  dueDate     DateTime?
+  priority    Priority     @default(MEDIUM)
+  order       Int
+  list        List         @relation(fields: [listId], references: [id], onDelete: Cascade)
+  listId      String
+  assignee    User?        @relation("AssignedTasks", fields: [assigneeId], references: [id])
+  assigneeId  String?
+  tags        Tag[]
+  attachments Attachment[]
+  activities  Activity[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Tag {
+  id    String @id @default(cuid())
+  name  String
+  tasks Task[]
+}
+
+model Attachment {
+  id        String   @id @default(cuid())
+  url       String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId    String
+  createdAt DateTime @default(now())
+}
+
+model Activity {
+  id        String   @id @default(cuid())
+  action    String
+  board     Board?   @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  boardId   String?
+  task      Task?    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId    String?
+  createdAt DateTime @default(now())
+}
+
+enum Role {
+  ADMIN
+  MEMBER
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
