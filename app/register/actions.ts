@@ -45,20 +45,15 @@ export async function registerAction(
         password: hashedPassword,
       },
     });
-
-    redirect("/dashboard");
   } catch (error) {
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === "P2002"
     ) {
-      return {
-        error: "Email already registered",
-      };
+      return { error: "Email already registered" };
     }
-
-    return {
-      error: "Failed to create account. Please try again.",
-    };
+    return { error: "Failed to create account. Please try again." };
   }
+
+  redirect("/dashboard");
 }
