@@ -52,6 +52,7 @@ export async function createBoardAction(
     });
 
     revalidatePath("/boards");
+    revalidatePath("/dashboard");
     return { success: true };
   } catch (error) {
     return {
@@ -87,6 +88,7 @@ export async function deleteBoardAction(boardId: string): Promise<{ error?: stri
     });
 
     revalidatePath("/boards");
+    revalidatePath("/dashboard");
     return {};
   } catch (error) {
     return {
