@@ -1,171 +1,75 @@
 "use client";
 
-import { useState, useActionState, useEffect } from "react";
+import { useState } from "react";
 import { createBoardAction } from "@/app/boards/actions";
-import { useRouter } from "next/navigation";
 
 export function CreateBoardButton() {
   const [isOpen, setIsOpen] = useState(false);
-  const router = useRouter();
-  const [state, formAction, isPending] = useActionState(createBoardAction, null);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [isPending, setIsPending] = useState(false);
 
-  const handleOpen = () => {
-    setIsOpen(true);
-  };
-
-  const handleClose = () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsPending(true);
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("description", description);
+    await createBoardAction(null, formData);
+    setTitle("");
+    setDescription("");
+    setIsPending(false);
     setIsOpen(false);
+    window.location.reload();
   };
 
-  // Close modal and refresh on success
-  useEffect(() => {
-    if (state?.success && isOpen) {
-      setIsOpen(false);
-      router.refresh();
-    }
-  }, [state?.success, isOpen, router]);
-
-  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) {
-      handleClose();
-    }
-  };
-
-  const handleModalContentClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    e.stopPropagation();
-  };
-
-  return (
-    <>
-      <button
-        type="button"
-        onClick={handleOpen}
-        className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 active:scale-95"
-      >
-        <svg
-          className="h-5 w-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 4v16m8-8H4"
-          />
-        </svg>
-        Create Board
-      </button>
-
-      {isOpen && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-          onClick={handleBackdropClick}
-        >
-          <div 
-            className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-xl border border-gray-200 bg-white p-6 shadow-xl"
-            onClick={handleModalContentClick}
-          >
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-gray-900">Create New Board</h2>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleClose();
-              }}
-              className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-            >
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
-
-          <form 
-            action={formAction}
-            className="space-y-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {state?.error && (
-              <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-800">
-                {state.error}
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <label
-                htmlFor="title"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Board Title *
-              </label>
+  if (isOpen) {
+    return (
+      <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.5)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center"}}>
+        <div style={{background:"white",borderRadius:"12px",padding:"24px",width:"100%",maxWidth:"440px",margin:"16px"}}>
+          <h2 style={{fontSize:"20px",fontWeight:600,marginBottom:"16px"}}>Create New Board</h2>
+          <form onSubmit={handleSubmit}>
+            <div style={{marginBottom:"12px"}}>
+              <label style={{display:"block",fontSize:"14px",fontWeight:500,marginBottom:"4px"}}>Board Title *</label>
               <input
-                id="title"
-                name="title"
                 type="text"
-                required
-                maxLength={100}
-                autoFocus
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-0"
                 placeholder="e.g., Marketing Campaign"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                required
+                style={{width:"100%",border:"1px solid #d1d5db",borderRadius:"8px",padding:"8px 12px",fontSize:"14px",boxSizing:"border-box"}}
               />
             </div>
-
-            <div className="space-y-2">
-              <label
-                htmlFor="description"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Description
-              </label>
+            <div style={{marginBottom:"16px"}}>
+              <label style={{display:"block",fontSize:"14px",fontWeight:500,marginBottom:"4px"}}>Description</label>
               <textarea
-                id="description"
-                name="description"
+                placeholder="Optional description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
                 rows={3}
-                maxLength={500}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-0"
-                placeholder="Optional description for your board"
+                style={{width:"100%",border:"1px solid #d1d5db",borderRadius:"8px",padding:"8px 12px",fontSize:"14px",boxSizing:"border-box"}}
               />
             </div>
-
-            <div className="flex gap-3 pt-2">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleClose();
-                }}
-                className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-0"
-              >
+            <div style={{display:"flex",gap:"12px",justifyContent:"flex-end"}}>
+              <button type="button" onClick={() => setIsOpen(false)} style={{padding:"8px 16px",border:"1px solid #d1d5db",borderRadius:"8px",fontSize:"14px",cursor:"pointer",background:"white"}}>
                 Cancel
               </button>
-              <button
-                type="submit"
-                disabled={isPending}
-                onClick={(e) => {
-                  e.stopPropagation();
-                }}
-                className="flex-1 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
+              <button type="submit" disabled={isPending} style={{padding:"8px 16px",background:"#111827",color:"white",borderRadius:"8px",fontSize:"14px",cursor:"pointer",border:"none",opacity:isPending?0.5:1}}>
                 {isPending ? "Creating..." : "Create Board"}
               </button>
             </div>
           </form>
         </div>
       </div>
-      )}
-    </>
+    );
+  }
+
+  return (
+    <button
+      onClick={() => setIsOpen(true)}
+      style={{display:"inline-flex",alignItems:"center",gap:"8px",background:"#111827",color:"white",padding:"8px 16px",borderRadius:"8px",fontSize:"14px",fontWeight:500,border:"none",cursor:"pointer"}}
+    >
+      + Create Board
+    </button>
   );
 }
