@@ -64,7 +64,7 @@ export function CreateBoardButton() {
           onClick={handleBackdropClick}
         >
           <div 
-            className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-6 shadow-xl"
+            className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-xl border border-gray-200 bg-white p-6 shadow-xl"
             onClick={handleModalContentClick}
           >
           <div className="mb-4 flex items-center justify-between">
