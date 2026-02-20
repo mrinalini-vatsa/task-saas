@@ -6,12 +6,11 @@ import { createListAction } from "./actions";
 import { BoardDnd } from "./board-dnd";
 
 type BoardPageProps = {
-  params: {
-    boardId: string;
-  };
+  params: Promise<{ boardId: string }>;
 };
 
 export default async function BoardPage({ params }: BoardPageProps) {
+  const { boardId } = await params;
   const session = await getServerAuthSession();
 
   if (!session?.user?.id) {
@@ -20,7 +19,7 @@ export default async function BoardPage({ params }: BoardPageProps) {
 
   const board = await prisma.board.findUnique({
     where: {
-      id: params.boardId,
+      id: boardId,
     },
     include: {
       lists: {
@@ -92,10 +91,10 @@ export default async function BoardPage({ params }: BoardPageProps) {
 
       <BoardDnd
         boardId={board.id}
-        initialLists={board.lists.map((l) => ({
+        initialLists={board.lists.map((l: { id: string; title: string; tasks: Array<{ id: string; title: string; description: string | null }> }) => ({
           id: l.id,
           title: l.title,
-          tasks: l.tasks.map((t) => ({
+          tasks: l.tasks.map((t: { id: string; title: string; description: string | null }) => ({
             id: t.id,
             title: t.title,
             description: t.description,
