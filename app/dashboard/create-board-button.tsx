@@ -104,10 +104,10 @@ export function CreateBoardButton() {
               </div>
             )}
 
-            <div>
+            <div className="space-y-2">
               <label
                 htmlFor="title"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-gray-700"
               >
                 Board Title *
               </label>
@@ -123,10 +123,10 @@ export function CreateBoardButton() {
               />
             </div>
 
-            <div>
+            <div className="space-y-2">
               <label
                 htmlFor="description"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-gray-700"
               >
                 Description
               </label>
