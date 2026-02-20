@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { createBoardAction } from "@/app/boards/actions";
 import { useRouter } from "next/navigation";
 
 export function CreateBoardButton() {
   const [isOpen, setIsOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
@@ -18,32 +18,45 @@ export function CreateBoardButton() {
   const handleClose = () => {
     setIsOpen(false);
     setError(null);
+    setIsPending(false);
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    e.stopPropagation();
     setError(null);
+    setIsPending(true);
 
     const formData = new FormData(e.currentTarget);
     
-    startTransition(async () => {
+    try {
       const result = await createBoardAction(null, formData);
       
       if (result.error) {
         setError(result.error);
+        setIsPending(false);
       } else if (result.success) {
         setIsOpen(false);
+        setIsPending(false);
         router.refresh();
         // Reset form
         e.currentTarget.reset();
       }
-    });
+    } catch (err) {
+      setError("Failed to create board. Please try again.");
+      setIsPending(false);
+      console.error("Error creating board:", err);
+    }
   };
 
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
       handleClose();
     }
+  };
+
+  const handleModalContentClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation();
   };
 
   return (
@@ -74,12 +87,18 @@ export function CreateBoardButton() {
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
           onClick={handleBackdropClick}
         >
-          <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-6 shadow-xl">
+          <div 
+            className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-6 shadow-xl"
+            onClick={handleModalContentClick}
+          >
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-semibold text-gray-900">Create New Board</h2>
             <button
               type="button"
-              onClick={handleClose}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleClose();
+              }}
               className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
             >
               <svg
@@ -144,7 +163,10 @@ export function CreateBoardButton() {
             <div className="flex gap-3 pt-2">
               <button
                 type="button"
-                onClick={handleClose}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleClose();
+                }}
                 className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-0"
               >
                 Cancel
