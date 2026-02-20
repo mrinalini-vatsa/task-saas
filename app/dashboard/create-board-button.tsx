@@ -1,53 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useActionState, useEffect } from "react";
 import { createBoardAction } from "@/app/boards/actions";
 import { useRouter } from "next/navigation";
 
 export function CreateBoardButton() {
   const [isOpen, setIsOpen] = useState(false);
-  const [isPending, setIsPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const [state, formAction, isPending] = useActionState(createBoardAction, null);
 
   const handleOpen = () => {
     setIsOpen(true);
-    setError(null);
   };
 
   const handleClose = () => {
     setIsOpen(false);
-    setError(null);
-    setIsPending(false);
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setError(null);
-    setIsPending(true);
-
-    const formData = new FormData(e.currentTarget);
-    
-    try {
-      const result = await createBoardAction(null, formData);
-      
-      if (result.error) {
-        setError(result.error);
-        setIsPending(false);
-      } else if (result.success) {
-        setIsOpen(false);
-        setIsPending(false);
-        router.refresh();
-        // Reset form
-        e.currentTarget.reset();
-      }
-    } catch (err) {
-      setError("Failed to create board. Please try again.");
-      setIsPending(false);
-      console.error("Error creating board:", err);
+  // Close modal and refresh on success
+  useEffect(() => {
+    if (state?.success && isOpen) {
+      setIsOpen(false);
+      router.refresh();
     }
-  };
+  }, [state?.success, isOpen, router]);
 
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
@@ -117,10 +93,14 @@ export function CreateBoardButton() {
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
+          <form 
+            action={formAction}
+            className="space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {state?.error && (
               <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-800">
-                {error}
+                {state.error}
               </div>
             )}
 
@@ -174,6 +154,9 @@ export function CreateBoardButton() {
               <button
                 type="submit"
                 disabled={isPending}
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
                 className="flex-1 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isPending ? "Creating..." : "Create Board"}
